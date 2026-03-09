@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF82">
+    <title>かけいぼ — 家計簿アプリ</title>
+    <meta name="description" content="シンプルで使いやすい日本円対応の家計簿アプリ。収支の記録・グラフ分析・予算管理が無料で使えます。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="theme-light">
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="loading-overlay">
+        <div class="loading-logo">&#128176;</div>
+        <p class="loading-text">すこしおまちください...</p>
+    </div>
+
+    <!-- ===== AUTH SCREEN ===== -->
+    <div id="auth-screen">
+        <div class="auth-inner">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <div class="auth-logo-icon">&#127968;</div>
+                <h1 class="auth-app-name">かけいぼ</h1>
+                <p class="auth-app-sub">日本円対応 スマート家計簿</p>
+            </div>
+
+            <!-- Tab Toggle -->
+            <div class="auth-tab-row">
+                <button class="auth-tab active" id="tab-login">ログイン</button>
+                <button class="auth-tab" id="tab-signup">新規登録</button>
+            </div>
+
+            <!-- Form -->
+            <div class="auth-form">
+                <div class="auth-input-wrap">
+                    <label class="auth-label">メールアドレス</label>
+                    <input type="email" id="auth-email" class="auth-input" placeholder="example@email.com"
+                        autocomplete="email">
+                </div>
+                <div class="auth-input-wrap">
+                    <label class="auth-label">パスワード</label>
+                    <input type="password" id="auth-password" class="auth-input" placeholder="6文字以上"
+                        autocomplete="current-password">
+                </div>
+                <p class="auth-error" id="auth-error"></p>
+                <button class="auth-submit-btn" id="btn-auth-submit">ログイン</button>
+                <p class="auth-note" id="auth-note">アカウントをお持ちでない方は「新規登録」タブで登録してください。</p>
+                <!-- Divider -->
+                <div class="auth-divider"><span>または</span></div>
+                <!-- Offline Mode -->
+                <button class="auth-offline-btn" id="btn-auth-offline">オフラインモードで使用</button>
+                <p class="auth-offline-note">オフラインモードはデータの同期がされません</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== APP WRAPPER ===== -->
+    <div id="app" style="display:none;">
+
+        <!-- ==================== HOME SCREEN ==================== -->
+        <section class="screen active" id="screen-home">
+            <div class="screen-inner scroll-y">
+                <!-- Header -->
+                <header class="home-header">
+                    <div class="user-info">
+                        <div class="avatar" id="home-avatar">👤</div>
+                        <div>
+                            <p class="greeting-sub">おはようございます、</p>
+                            <p class="greeting-name" id="home-username">ユーザーさん</p>
+                        </div>
+                    </div>
+                    <button class="icon-btn" id="btn-notif" aria-label="通知">
+                        <span class="icon">🔔</span>
+                    </button>
+                </header>
+
+                <!-- Month Navigator -->
+                <div class="month-nav">
+                    <button class="month-btn" id="home-prev-month" aria-label="前月">&#8249;</button>
+                    <button class="month-label" id="home-month-label">2024年3月</button>
+                    <button class="month-btn" id="home-next-month" aria-label="次月">&#8250;</button>
+                    <span class="status-badge" id="home-status-badge">順調</span>
+                </div>
+
+                <!-- Balance Card -->
+                <div class="card balance-card">
+                    <p class="card-label">残高</p>
+                    <p class="balance-amount" id="home-balance">¥0</p>
+                    <div class="balance-row">
+                        <div class="balance-item income">
+                            <span class="bi-icon">↑</span>
+                            <div>
+                                <p class="bi-label">収入</p>
+                                <p class="bi-amount" id="home-income">+¥0</p>
+                            </div>
+                        </div>
+                        <div class="balance-item expense">
+                            <span class="bi-icon">↓</span>
+                            <div>
+                                <p class="bi-label">支出</p>
+                                <p class="bi-amount" id="home-expense">-¥0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Donut -->
+                <div class="card budget-card">
+                    <div class="budget-chart-wrap">
+                        <canvas id="chart-budget-donut" width="200" height="200"></canvas>
+                        <div class="budget-center">
+                            <p class="bc-sub">今月の予算</p>
+                            <p class="bc-amount" id="budget-remaining">¥0</p>
+                            <p class="bc-detail" id="budget-limit-text">残り / 限度額 ¥0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Cards -->
+                <div class="section-header">
+                    <h2 class="section-title">カテゴリー</h2>
+                    <button class="link-btn" id="btn-home-all-cat">すべて見る</button>
+                </div>
+                <div class="category-scroll" id="home-category-scroll">
+                    <!-- JS で生成 -->
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="section-header">
+                    <h2 class="section-title">最近の取引</h2>
+                    <button class="link-btn" id="btn-home-history">すべて見る</button>
+                </div>
+                <div class="recent-list" id="home-recent-list">
+                    <!-- JS で生成 -->
+                </div>
+
+                <div class="bottom-spacer"></div>
+            </div>
+        </section>
+
+        <!-- ==================== INPUT SCREEN ==================== -->
+        <section class="screen" id="screen-input">
+            <div class="screen-inner input-screen-inner">
+                <!-- Top Bar -->
+                <div class="input-topbar">
+                    <button class="text-btn" id="btn-input-cancel">キャンセル</button>
+                    <h1 class="input-title">新規登録</h1>
+                    <button class="save-btn" id="btn-input-save">保存</button>
+                </div>
+
+                <!-- Type Toggle -->
+                <div class="type-toggle">
+                    <button class="toggle-btn active" id="toggle-expense" data-type="expense">支出</button>
+                    <button class="toggle-btn" id="toggle-income" data-type="income">収入</button>
+                </div>
+
+                <!-- Amount Display -->
+                <div class="amount-display-wrap">
+                    <p class="amount-label">金額を入力</p>
+                    <div class="amount-display">
+                        <span class="yen-sign">¥</span>
+                        <span class="amount-value" id="input-amount-display">0</span>
+                        <span class="cursor-blink">|</span>
+                    </div>
+                    <!-- Quick Add -->
+                    <div class="quick-add-row">
+                        <button class="quick-btn" data-val="100">+¥100</button>
+                        <button class="quick-btn" data-val="500">+¥500</button>
+                        <button class="quick-btn" data-val="1000">+¥1,000</button>
+                        <button class="quick-btn" data-val="10000">+¥10,000</button>
+                    </div>
+                </div>
+
+                <!-- Category Select -->
+                <div class="input-section">
+                    <div class="input-section-header">
+                        <p class="input-section-title">カテゴリを選択</p>
+                    </div>
+                    <div class="cat-grid" id="input-cat-grid">
+                        <!-- JS で生成 -->
+                    </div>
+                </div>
+
+                <!-- Date & Memo -->
+                <div class="input-row-group">
+                    <div class="input-field-row">
+                        <span class="field-icon">📅</span>
+                        <div class="field-content">
+                            <p class="field-label">日付</p>
+                            <input type="date" id="input-date" class="field-input date-input">
+                        </div>
+                    </div>
+                    <div class="input-field-row">
+                        <span class="field-icon">✏️</span>
+                        <div class="field-content">
+                            <p class="field-label">メモ</p>
+                            <input type="text" id="input-memo" class="field-input" placeholder="メモを追加...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Numpad -->
+                <div class="numpad">
+                    <div class="numpad-grid">
+                        <button class="num-btn" data-num="1">1</button>
+                        <button class="num-btn" data-num="2">2</button>
+                        <button class="num-btn" data-num="3">3</button>
+                        <button class="num-btn" data-num="4">4</button>
+                        <button class="num-btn" data-num="5">5</button>
+                        <button class="num-btn" data-num="6">6</button>
+                        <button class="num-btn" data-num="7">7</button>
+                        <button class="num-btn" data-num="8">8</button>
+                        <button class="num-btn" data-num="9">9</button>
+                        <button class="num-btn" data-num=".">.</button>
+                        <button class="num-btn" data-num="0">0</button>
+                        <button class="num-btn del-btn" data-num="del">⌫</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HISTORY SCREEN ==================== -->
+        <section class="screen" id="screen-history">
+            <div class="screen-inner scroll-y">
+                <header class="page-header">
+                    <h1 class="page-title">取引履歴</h1>
+                    <button class="icon-btn" id="btn-history-notif" aria-label="通知">🔔</button>
+                </header>
+
+                <!-- Month Nav -->
+                <div class="month-nav">
+                    <button class="month-btn" id="hist-prev-month">&#8249;</button>
+                    <div class="month-center">
+                        <p class="month-label-text" id="hist-month-label">2024年3月</p>
+                        <p class="month-sub" id="hist-month-sub">支出合計: ¥0</p>
+                    </div>
+                    <button class="month-btn" id="hist-next-month">&#8250;</button>
+                </div>
+
+                <!-- Search -->
+                <div class="search-row">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="hist-search" class="search-input" placeholder="検索...">
+                    </div>
+                    <button class="filter-btn" id="btn-filter">⚙️</button>
+                </div>
+
+                <!-- Filter Chips -->
+                <div class="filter-chips" id="hist-filter-chips" style="display:none;">
+                    <!-- JS で生成 -->
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="hist-summary-row">
+                    <div class="card hist-summary-card income">
+                        <span class="hs-dot"></span>
+                        <div>
+                            <p class="hs-label">収入</p>
+                            <p class="hs-amount" id="hist-income-total">¥0</p>
+                        </div>
+                    </div>
+                    <div class="card hist-summary-card expense">
+                        <span class="hs-dot"></span>
+                        <div>
+                            <p class="hs-label">支出</p>
+                            <p class="hs-amount" id="hist-expense-total">¥0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction List -->
+                <div id="hist-list">
+                    <!-- JS で生成 -->
+                </div>
+
+                <div class="bottom-spacer"></div>
+            </div>
+        </section>
+
+        <!-- ==================== REPORT SCREEN ==================== -->
+        <section class="screen" id="screen-report">
+            <div class="screen-inner scroll-y">
+                <header class="page-header">
+                    <h1 class="page-title">レポート</h1>
+                    <button class="icon-btn" id="btn-report-share" aria-label="共有">📤</button>
+                </header>
+
+                <!-- Month Nav -->
+                <div class="month-nav">
+                    <button class="month-btn" id="rep-prev-month">&#8249;</button>
+                    <p class="month-label-text" id="rep-month-label">2024年3月</p>
+                    <button class="month-btn" id="rep-next-month">&#8250;</button>
+                </div>
+
+                <!-- Comparison Banner -->
+                <div class="card comparison-card" id="rep-comparison">
+                    <div class="comp-icon" id="rep-comp-icon">↗️</div>
+                    <div class="comp-text">
+                        <p class="comp-main" id="rep-comp-main">先月より¥0 少なく使いました。素晴らしい！</p>
+                        <p class="comp-total" id="rep-comp-total">¥0</p>
+                        <p class="comp-sub" id="rep-comp-sub">今月の総支出</p>
+                    </div>
+                    <div class="comp-badge" id="rep-comp-badge">↓0%</div>
+                </div>
+
+                <!-- Cashflow Chart -->
+                <div class="card">
+                    <div class="chart-header">
+                        <h2 class="chart-title">キャッシュフロー</h2>
+                        <div class="chart-legend">
+                            <span class="legend-dot income"></span><span class="legend-label">収入</span>
+                            <span class="legend-dot expense"></span><span class="legend-label">支出</span>
+                        </div>
+                    </div>
+                    <canvas id="chart-cashflow" height="160"></canvas>
+                </div>
+
+                <!-- Expense Donut -->
+                <div class="card">
+                    <h2 class="chart-title">支出分析</h2>
+                    <div class="donut-wrap">
+                        <div class="donut-chart-area">
+                            <canvas id="chart-expense-donut" width="180" height="180"></canvas>
+                            <div class="donut-center">
+                                <p class="dc-label">合計</p>
+                                <p class="dc-amount" id="rep-donut-total">¥0</p>
+                            </div>
+                        </div>
+                        <div class="donut-legend" id="rep-donut-legend">
+                            <!-- JS で生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Breakdown -->
+                <div class="card">
+                    <h2 class="chart-title">週間内訳</h2>
+                    <div class="weekly-list" id="rep-weekly-list">
+                        <!-- JS で生成 -->
+                    </div>
+                </div>
+
+                <!-- Show All Button -->
+                <button class="outline-btn full-width" id="btn-rep-all-cat">すべてのカテゴリを表示</button>
+
+                <div class="bottom-spacer"></div>
+            </div>
+        </section>
+
+        <!-- ==================== SETTINGS SCREEN ==================== -->
+        <section class="screen" id="screen-settings">
+            <div class="screen-inner scroll-y">
+                <header class="page-header">
+                    <h1 class="page-title">設定</h1>
+                    <div class="avatar sm" id="settings-avatar">👤</div>
+                </header>
+
+                <!-- Budget Card -->
+                <div class="card budget-setting-card">
+                    <div class="budget-set-header">
+                        <div>
+                            <p class="bsh-label">月間予算の設定</p>
+                            <p class="bsh-amount" id="set-budget-display">¥200,000</p>
+                        </div>
+                        <button class="edit-btn" id="btn-edit-budget">✏️</button>
+                    </div>
+                    <div class="budget-progress-wrap">
+                        <div class="budget-progress-bar">
+                            <div class="budget-progress-fill" id="set-budget-bar" style="width:0%"></div>
+                        </div>
+                        <div class="budget-progress-labels">
+                            <span id="set-budget-used-text">¥0 使用済み</span>
+                            <span id="set-budget-pct">0% 使用</span>
+                        </div>
+                    </div>
+                    <p class="budget-remain-text" id="set-budget-remain">今月の残高は ¥0 です。</p>
+                </div>
+
+                <!-- Category Section -->
+                <div class="settings-section-label">カテゴリ編集</div>
+                <div class="card">
+                    <div class="settings-cat-row" id="settings-cat-preview">
+                        <!-- JS で生成 -->
+                    </div>
+                    <button class="settings-row-btn" id="btn-manage-expense-cat">
+                        <span>🟢 支出カテゴリの管理</span><span class="row-arrow">›</span>
+                    </button>
+                    <button class="settings-row-btn" id="btn-manage-income-cat">
+                        <span>🟤 収入源の管理</span><span class="row-arrow">›</span>
+                    </button>
+                </div>
+
+                <!-- App Settings -->
+                <div class="settings-section-label">アプリ設定</div>
+                <div class="card settings-list-card">
+                    <div class="settings-row">
+                        <span class="settings-row-icon">👤</span>
+                        <span class="settings-row-label">ユーザー名</span>
+                        <div class="settings-row-right">
+                            <span class="settings-row-value" id="set-username-val">ユーザー</span>
+                            <button class="edit-inline-btn" id="btn-edit-username">変更</button>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-row-icon">💴</span>
+                        <span class="settings-row-label">通貨設定</span>
+                        <span class="settings-row-value">JPY (¥)</span>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-row-icon">📅</span>
+                        <span class="settings-row-label">週の始まり</span>
+                        <select class="settings-select" id="set-week-start">
+                            <option value="monday">月曜日</option>
+                            <option value="sunday">日曜日</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-row-icon">🌓</span>
+                        <span class="settings-row-label">アプリテーマ</span>
+                        <button class="theme-toggle-btn" id="btn-theme-toggle">
+                            <span id="theme-label">ライトモード</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data -->
+                <div class="settings-section-label">データとアカウント</div>
+                <div class="card settings-list-card">
+                    <!-- アカウント情報 -->
+                    <div class="settings-row" id="account-info-row">
+                        <span class="settings-row-icon">&#128100;</span>
+                        <div style="flex:1;">
+                            <p class="settings-row-label">アカウント</p>
+                            <p class="settings-row-value" id="set-account-email">ログイン中...</p>
+                        </div>
+                        <span class="sync-badge" id="set-sync-badge">&#9729;&#65039; 同期済み</span>
+                    </div>
+                    <button class="settings-row-btn" id="btn-export-json">
+                        <span>⬇️ データのエクスポート (JSON)</span><span class="row-arrow">›</span>
+                    </button>
+                    <button class="settings-row-btn danger" id="btn-reset-data">
+                        <span>🗑️ 全データをリセット</span><span class="row-arrow">›</span>
+                    </button>
+                    <button class="settings-row-btn danger" id="btn-logout">
+                        <span>&#128682; ログアウト</span><span class="row-arrow">›</span>
+                    </button>
+                </div>
+
+                <p class="app-version">バージョン 1.0.0 (Build 1)</p>
+                <div class="bottom-spacer"></div>
+            </div>
+        </section>
+
+        <!-- ==================== BOTTOM NAV ==================== -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button class="nav-item active" data-screen="home" id="nav-home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">ホーム</span>
+            </button>
+            <button class="nav-item" data-screen="history" id="nav-history">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">履歴</span>
+            </button>
+            <button class="nav-fab" id="nav-fab" aria-label="新規追加">
+                <span class="fab-icon">+</span>
+            </button>
+            <button class="nav-item" data-screen="report" id="nav-report">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">レポート</span>
+            </button>
+            <button class="nav-item" data-screen="settings" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">設定</span>
+            </button>
+        </nav>
+
+        <!-- ==================== MODALS ==================== -->
+
+        <!-- Budget Edit Modal -->
+        <div class="modal-overlay" id="modal-budget">
+            <div class="modal-card">
+                <h2 class="modal-title">月間予算の設定</h2>
+                <div class="modal-input-wrap">
+                    <span class="modal-yen">¥</span>
+                    <input type="number" id="modal-budget-input" class="modal-input" placeholder="200000" min="0">
+                </div>
+                <div class="modal-btns">
+                    <button class="modal-cancel-btn" id="btn-budget-cancel">キャンセル</button>
+                    <button class="modal-ok-btn" id="btn-budget-ok">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Username Edit Modal -->
+        <div class="modal-overlay" id="modal-username">
+            <div class="modal-card">
+                <h2 class="modal-title">ユーザー名の変更</h2>
+                <input type="text" id="modal-username-input" class="modal-input full" placeholder="名前を入力"
+                    maxlength="20">
+                <div class="modal-btns">
+                    <button class="modal-cancel-btn" id="btn-username-cancel">キャンセル</button>
+                    <button class="modal-ok-btn" id="btn-username-ok">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirm Modal -->
+        <div class="modal-overlay" id="modal-delete">
+            <div class="modal-card">
+                <h2 class="modal-title">取引を削除</h2>
+                <p class="modal-text">この取引を削除してもよろしいですか？</p>
+                <div class="modal-btns">
+                    <button class="modal-cancel-btn" id="btn-delete-cancel">キャンセル</button>
+                    <button class="modal-ok-btn danger" id="btn-delete-ok">削除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Confirm Modal -->
+        <div class="modal-overlay" id="modal-reset">
+            <div class="modal-card">
+                <h2 class="modal-title">⚠️ 全データをリセット</h2>
+                <p class="modal-text">すべての取引データが削除されます。この操作は元に戻せません。</p>
+                <div class="modal-btns">
+                    <button class="modal-cancel-btn" id="btn-reset-cancel">キャンセル</button>
+                    <button class="modal-ok-btn danger" id="btn-reset-ok">リセット</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Manager Modal -->
+        <div class="modal-overlay" id="modal-cat-manager">
+            <div class="modal-card tall">
+                <div class="modal-header-row">
+                    <h2 class="modal-title" id="cat-manager-title">カテゴリ管理</h2>
+                    <button class="modal-close-btn" id="btn-cat-manager-close">✕</button>
+                </div>
+                <div class="cat-manager-list" id="cat-manager-list">
+                    <!-- JS で生成 -->
+                </div>
+                <div class="cat-add-row">
+                    <input type="text" id="cat-manager-emoji" class="modal-input emoji-input" placeholder="🏷️"
+                        maxlength="2">
+                    <input type="text" id="cat-manager-name" class="modal-input flex-1" placeholder="カテゴリ名">
+                    <button class="modal-ok-btn sm" id="btn-cat-add">追加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+
+    </div><!-- /app -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
