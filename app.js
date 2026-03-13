@@ -386,7 +386,10 @@ function renderHome() {
     const donutColor = pct >= 1 ? '#E57373' : pct >= 0.75 ? '#FF8C42' : '#4CAF82';
 
     if (chartBudgetDonut) { chartBudgetDonut.destroy(); chartBudgetDonut = null; }
-    const ctx1 = document.getElementById('chart-budget-donut').getContext('2d');
+    const canvas1 = document.getElementById('chart-budget-donut');
+    if (!canvas1 || typeof Chart === 'undefined') return; // ガード
+    
+    const ctx1 = canvas1.getContext('2d');
     chartBudgetDonut = new Chart(ctx1, {
         type: 'doughnut',
         data: {
@@ -1471,10 +1474,12 @@ async function init() {
 
     // 認証状態確認
     let session = null;
-    try {
-        session = await SbAuth.getSession();
-    } catch (e) {
-        console.error('[Auth] 初期化エラー:', e);
+    if (typeof supabase !== 'undefined') {
+        try {
+            session = await SbAuth.getSession();
+        } catch (e) {
+            console.warn('[Auth] オフラインまたは接続不可:', e);
+        }
     }
 
     // ローディング非表示
@@ -1482,12 +1487,15 @@ async function init() {
     setTimeout(() => overlay.remove(), 500);
 
     if (session) {
-        // セッションあり → そのままアプリ起動
         state.currentUser = session.user;
         await onLogin();
     } else {
-        // セッションなし → 認証画面
-        showAuthScreen();
+        // デフォルトでアプリを表示（オフラインモード）
+        // ユーザーが明示的にログインしたい場合のみ認証画面へ
+        state.offlineMode = true;
+        loadData();
+        if (state.transactions.length === 0) generateSampleData();
+        await startApp();
     }
 
     // 認証状態変化リスナー

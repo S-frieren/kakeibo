@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">かけいぼ</string>
+    <string name="title_activity_main">かけいぼ</string>
+    <string name="package_name">com.shar.kakeibo</string>
+    <string name="custom_url_scheme">com.shar.kakeibo</string>
+</resources>

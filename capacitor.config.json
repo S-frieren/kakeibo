@@ -1,0 +1,6 @@
+{
+  "appId": "com.shar.kakeibo",
+  "appName": "かけいぼ",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

@@ -23,7 +23,7 @@
 
     <!-- ===== LOADING OVERLAY ===== -->
     <div id="loading-overlay">
-        <div class="loading-logo">&#128176;</div>
+        <img src="assets/logo.png" alt="logo" class="loading-logo-img">
         <p class="loading-text">すこしおまちください...</p>
     </div>
 
@@ -32,7 +32,7 @@
         <div class="auth-inner">
             <!-- Logo -->
             <div class="auth-logo">
-                <div class="auth-logo-icon">&#127968;</div>
+                <img src="assets/logo.png" alt="logo" class="auth-logo-img">
                 <h1 class="auth-app-name">かけいぼ</h1>
                 <p class="auth-app-sub">日本円対応 スマート家計簿</p>
             </div>
@@ -440,6 +440,10 @@
                 <!-- Data -->
                 <div class="settings-section-label">データとアカウント</div>
                 <div class="card settings-list-card">
+                    <!-- インストールボタン (PWA) JSで制御 -->
+                    <button class="settings-row-btn" id="btn-install-app" style="display: none;">
+                        <span style="color: var(--accent); font-weight: bold;">📱 アプリとしてインストール（ダウンロード）</span><span class="row-arrow">›</span>
+                    </button>
                     <!-- アカウント情報 -->
                     <div class="settings-row" id="account-info-row">
                         <span class="settings-row-icon">&#128100;</span>

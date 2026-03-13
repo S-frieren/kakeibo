@@ -30,7 +30,7 @@
   --radius-full: 999px;
   --nav-h: 72px;
   --transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  --font: 'Noto Sans JP', sans-serif;
+  --font: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
 /* ---- ダークモード ---- */
@@ -64,16 +64,21 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 body {
   font-family: var(--font);
   background: var(--bg-primary);
   color: var(--text-primary);
-  min-height: 100dvh;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
-  touch-action: manipulation;
-  transition: background var(--transition), color var(--transition);
+  position: fixed; /* 全体がスクロールするのを防ぐ */
+  top: 0;
+  left: 0;
+  touch-action: none; /* 外側のバウンスを防ぐ */
 }
 
 button {
@@ -103,12 +108,16 @@ canvas {
 #app {
   position: relative;
   width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-primary);
-  box-shadow: var(--shadow-lg);
+  /* セーフエリア：iPhoneの時計や下の棒と被らないようにする */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* =====================================================
@@ -116,12 +125,17 @@ canvas {
    ===================================================== */
 .screen {
   position: absolute;
-  inset: 0 0 var(--nav-h) 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-h); /* ナビバーの分だけ開ける */
   opacity: 0;
   pointer-events: none;
-  transform: translateX(40px);
-  transition: opacity var(--transition), transform var(--transition);
-  will-change: transform, opacity;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(30px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .screen.active {
@@ -156,6 +170,7 @@ canvas {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* ネイティブのような慣性スクロール */
 }
 
 .scroll-y {
@@ -190,7 +205,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0 12px;
+  padding: 12px 16px; /* 余白を増やして時計との干渉を避ける */
 }
 
 .user-info {
@@ -250,7 +265,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0 12px;
+  padding: 12px 16px;
 }
 
 .page-title {
@@ -626,7 +641,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 12px 16px;
   background: var(--bg-card);
   box-shadow: var(--shadow-sm);
 }
@@ -1588,8 +1603,8 @@ canvas {
   align-items: center;
   justify-content: space-around;
   box-shadow: 0 -1px 0 var(--border), 0 -4px 20px rgba(0, 0, 0, 0.06);
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 50;
+  z-index: 200;
+  padding-bottom: 8px; /* 文字が詰まりすぎないように下に余白 */
 }
 
 .nav-item {
@@ -1984,16 +1999,26 @@ canvas {
   pointer-events: none;
 }
 
-.loading-logo {
-  font-size: 56px;
+.loading-logo-img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
   animation: scaleIn 0.5s ease;
 }
 
 .loading-text {
   color: white;
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0.85;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.auth-logo-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
 }
 
 /* =====================================================
